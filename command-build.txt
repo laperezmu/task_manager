@@ -1,0 +1,1 @@
+pyinstaller --onefile --add-data "data/outlier.db:data" --add-data "templates:templates" --add-data "static/styles.css:static" --hidden-import=flask --name "task_manager" app.py
