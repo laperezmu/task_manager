@@ -28,7 +28,9 @@ def init_sqlite_db():
             notes TEXT,
             elapsedTime REAL NOT NULL,
             earnings REAL NOT NULL,
-            timeStatus TEXT NOT NULL
+            timeStatus TEXT NOT NULL,
+            paidEarnings REAL NOT NULL,
+            paidStatus INTEGER NOT NULL DEFAULT 0
         )
     ''')
     conn.commit()
@@ -123,9 +125,9 @@ def submit_form():
     conn = sqlite3.connect('data/outlier.db')
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO tasks (createdAt, project, type, taskId, begin, end, notes, elapsedTime, earnings, timeStatus)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (createdAt, project, task_type, task_id, time_begin, time_end, notes, elapsed_time_in_minutes, earnings, time_status))
+        INSERT INTO tasks (createdAt, project, type, taskId, begin, end, notes, elapsedTime, earnings, timeStatus, paidEarnings, paidStatus)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (createdAt, project, task_type, task_id, time_begin, time_end, notes, elapsed_time_in_minutes, earnings, time_status, 0, 0))
     conn.commit()
     conn.close()
 
@@ -134,6 +136,7 @@ def submit_form():
 @app.route('/index', methods=['GET','POST'] )
 def list_projects():
     date=request.form.get("date", False)
+    task_id=request.form.get("taskid", False)
 
     if date is False:
         now = datetime.now()
@@ -141,6 +144,14 @@ def list_projects():
     else:
         createdAt = date[5:7]+"/"+date[8:]+"/"+date[2:4]
 
+    if task_id is not False:
+        paid_earnings=request.form.get("earnings", False)
+        conn = sqlite3.connect('data/outlier.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute('UPDATE tasks SET paidEarnings = ?, paidStatus = ? WHERE id = ?', (paid_earnings, 1, task_id, ))
+        conn.commit()
+        conn.close()
 
     conn = sqlite3.connect('data/outlier.db')
     conn.row_factory = sqlite3.Row
@@ -153,12 +164,21 @@ def list_projects():
     cursor = conn.cursor()
     cursor.execute('SELECT SUM(earnings) FROM tasks WHERE createdAt = ?', (createdAt, ))
     total_earnings = cursor.fetchall()
-    total = 0
+    total_estimated = 0
     if total_earnings[0][0] is not None:
-        total = total_earnings[0][0]
+        total_estimated = total_earnings[0][0]
     conn.close()
 
-    return render_template('index.html', records=records, total=total)
+    conn = sqlite3.connect('data/outlier.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT SUM(paidEarnings) FROM tasks WHERE createdAt = ?', (createdAt, ))
+    total_paid_earnings = cursor.fetchall()
+    total_paid = 0
+    if total_earnings[0][0] is not None:
+        total_paid = total_paid_earnings[0][0]
+    conn.close()
+
+    return render_template('index.html', records=records, totalEstimated=total_estimated, totalPaid=total_paid)
 
 
 def calculate_elapsed_time(begin, end):

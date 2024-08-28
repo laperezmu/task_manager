@@ -56,19 +56,28 @@
     </div>
     
     <div class="container1">
-        <h1>Reporte de tareas</h1>
-        <label for="date">Fecha de registro:</label>
-        <form action="/index" method="POST" class="form2">
-            <input type="date" id="date" name="date"/>
-            <br>  <br>
-            <input type="submit" value="Enviar">
-            <br><br>
-        </form>
+        <div class="container3">
+            <div class="part"></div>
+            <div class="part" >
+                <h1>Reporte de tareas</h1>
+                <label for="date">Fecha de registro:</label>
+                <form action="/index" method="POST" class="form2">
+                    <input type="date" id="date" name="date"/>
+                    <br>  <br>
+                    <input type="submit" value="Enviar">
+                    <br><br>
+                </form>
+            </div>
+            <div class="part">        
+                Ganancias estimadas del día: <span>${{totalEstimated}}</span>
+                <br>
+                Ganancias pagadas del día: <span>${{totalPaid}}</span>
+            </div>
+        </div>
         <table class="table-wrapper">
             <thead>
                 <tr>
-                    <th>Fecha</th>
-                    <th>Proyecto</th>
+                    <th>Proyecto Bee</th>
                     <th>Tipo de tarea</th>
                     <th>Task ID</th>
                     <th>Hora de Inicio</th>
@@ -76,28 +85,43 @@
                     <th>Duración</th>
                     <th>Status</th>
                     <th>Ganancias estimadas</th>
+                    <th>Ganancias reales</th>
+                    <th>Pagado</th>
                     <th>Notas</th>
                 </tr>
             </thead>
             <tbody id="report-table">
                 <!-- Las filas de la tabla se cargarán aquí -->
-                {% for record in records %}
-                <tr>
-                    <td>{{ record.createdAt }}</td>
-                    <td>{{ record.project }}</td>
-                    <td>{{ record.type }}</td>
-                    <td>{{ record.taskId }}</td>
-                    <td>{{ record.begin }}</td>
-                    <td>{{ record.end }}</td>
-                    <td>{{ record.elapsedTime }} min</td>
-                    <td>{{ record.timeStatus }}</td>
-                    <td>$ {{ record.earnings }}</td>
-                    <td>{{ record.notes }}</td>
-                </tr>
-                {% endfor %}
+                {% if records %}
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.project }}</td>
+                        <td>{{ record.type }}</td>
+                        <td>{{ record.taskId }}</td>
+                        <td>{{ record.begin }}</td>
+                        <td>{{ record.end }}</td>
+                        <td>{{ record.elapsedTime }} min</td>
+                        <td>{{ record.timeStatus }}</td>
+                        <td>$ {{ record.earnings }}</td>
+
+                        {% if record.paidStatus == 0 %}
+                        <form action="/index" method="POST">
+                            <input type="hidden" id="taskid" name="taskid" value=" {{ record.id }} "/>
+                            <td><input type="number" id="earnings" name="earnings" step=".01" value="{{ record.paidEarnings }}" style="width: 60px;"/></td>
+                            <td><input type="submit" value="Actualizar"></td>
+                            </form>
+                        {% else %}
+                            <td>$ {{ record.paidEarnings }}</td>
+                            <td>Sí</td>
+                        {% endif %}
+                        <td>{{ record.notes }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>  <td colspan="11" style="text-align: center; vertical-align: middle;">Sin datos</td></tr>
+                {% endif %}
             </tbody>
         </table>
-       <p>Ganancias estimadas del día: ${{total}}</p> 
     </div>
 </body>
 </html>
