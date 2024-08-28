@@ -47,7 +47,6 @@ body {
 
 .part {
     flex: 1;
-    text-align: center; /* Opcional: centra el texto horizontalmente */
     padding: 10px; /* Opcional: añade algo de espacio interno */
     align-items: center;
 }
